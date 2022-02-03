@@ -28,9 +28,9 @@ router.get('/auction/:id', (req, res) => {
   const { id } = req.params;
   const auction = auctions.get(id);
   if (auction) {
-    res.status(200).json({ auction });
+    return res.status(200).json({ auction });
   } else {
-    res.status(404).json({ error: `Auction ${id} not found` });
+    return res.status(404).json({ error: `Auction ${id} not found` });
   }
 });
 

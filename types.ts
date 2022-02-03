@@ -6,8 +6,9 @@ export type Auction = {
   start: Date;
   end: Date;
   item: string;
-  startingBid: number
-  minIncrement: number	// the minimum difference between the highest existing bid and an incoming bid
+  startingNumber: number; // renamed from 'startingBid' in recording
+  currentBid: Bid;  // stores the current highest bid placed on the auction (this is needed for POST /auction/:id/bid implementation)
+  minIncrement: number;	// the minimum difference between the highest existing bid and an incoming bid
 }
 
 export type Bid = {
