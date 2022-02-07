@@ -1,5 +1,4 @@
 export type Auction = {
-  id?: string;
   auctioneer: string;
   name: string;
   description: string;
@@ -11,14 +10,12 @@ export type Auction = {
 }
 
 export type Bid = {
-  id?: string;
   auctionId?: string;
   bidder: string;
   amount: number;
 }
 
 export type User = {
-  id?: string;
   username: string;
   balance: number;
 }

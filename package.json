@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "express": "^4.17.2",
+    "pg": "^8.7.3",
     "ts-node": "^10.4.0",
+    "typeorm": "^0.2.41",
     "uuid": "^8.3.2"
   }
 }
