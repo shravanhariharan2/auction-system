@@ -1,32 +1,32 @@
 import express from 'express';
+import { getConnection } from 'typeorm';
 import * as uuid from 'uuid';
+import { AuctionModel } from './models/AuctionModel';
+import { createAuction, createBid, createUser, getAuction, getAuctions, getUser, updateHighestBid } from './repositories';
 import { Auction, Bid, User } from './types';
 
 const router = express.Router();
 
-// our 'database' (we'll be adding an actual database connection during the SQL workshop)
-const auctions = new Map<string, Auction>();
-const bids = new Map<string, Bid>();
-const users = new Map<string, User>();
-
-// add a fake auctioneer
-const auctioneerId = '249b2f8b-5285-4031-a164-63102017a9ba';
-const auctioneer = {
-  id: auctioneerId,
-  username: 'auctioneer',
-  balance: 100,
+const addFakeAuctioneer = async () => {
+  const auctioneerId = '249b2f8b-5285-4031-a164-63102017a9ba';
+  const auctioneer = {
+    id: auctioneerId,
+    username: 'auctioneer',
+    balance: 100,
+  }
+  const conn = getConnection();
+  await createUser(conn, auctioneer);
 }
-users.set(auctioneerId, auctioneer);
 
 // define the routes
-router.get('/auctions', (req, res) => {
-  const auctionList = Array.from(auctions.values());
+router.get('/auctions', async (req, res) => {
+  const auctionList = await getAuctions(req.db);
   return res.status(200).json({ auctions: auctionList });
 });
 
-router.get('/auction/:id', (req, res) => {
+router.get('/auction/:id', async (req, res) => {
   const id: string = req.params.id;
-  const auction = auctions.get(id);
+  const auction = await getAuction(req.db, id);
   if (auction) {
     return res.status(200).json({ auction });
   } else {
@@ -34,7 +34,7 @@ router.get('/auction/:id', (req, res) => {
   }
 });
 
-router.post('/auction', (req, res) => {
+router.post('/auction', async (req, res) => {
   const auction: Auction = req.body.auction;
 
   // convert strings to dates
@@ -42,16 +42,15 @@ router.post('/auction', (req, res) => {
   auction.end = new Date(auction.end);
 
   // create auction
-  const id = uuid.v4();
-  auction.id = id;
-  auctions.set(id, auction);
+  const createdAuction = await createAuction(req.db, auction);
 
-  return res.status(200).json({ auction });
+  return res.status(200).json({ auction: createdAuction });
 });
 
-router.post('/auction/:id/bid', (req, res) => {
+router.post('/auction/:id/bid', async (req, res) => {
   const auctionId: string = req.params.id;
-  const auction = auctions.get(auctionId);
+  const conn = req.db;
+  const auction = await getAuction(conn, auctionId);
   // check if auction id is valid
   if (!auction) {
     return res.status(404).json({ error: `Auction ${auctionId} not found` });
@@ -65,7 +64,7 @@ router.post('/auction/:id/bid', (req, res) => {
 
   const bid: Bid = req.body.bid;
   const bidderId = bid.bidder;
-  const user = users.get(bidderId);
+  const user = await getUser(conn, bidderId);
 
   // check if user id is valid
   if (!user) {
@@ -89,23 +88,17 @@ router.post('/auction/:id/bid', (req, res) => {
   }
 
   // update our database
-  auction.currentBid = bid;
-  bid.auctionId = auction.id;
-  auctions.set(auctionId, auction);
-  const bidId = uuid.v4();
-  bid.id = bidId;
-  bids.set(bidId, bid);
+  const bidModel = await createBid(req.db, bid, user, auction);
+  await updateHighestBid(conn, auction, bidModel);
 
   // return success
   return res.status(200).json({ bid });
 });
 
-router.post('/user', (req, res) => {
+router.post('/user', async (req, res) => {
   const user: User = req.body.user;
-  const id = uuid.v4();
-  user.id = id;
-  users.set(id, user);
-  return res.status(200).json({ user });
+  const userModel = await createUser(req.db, user);
+  return res.status(200).json({ user: userModel });
 });
 
 
