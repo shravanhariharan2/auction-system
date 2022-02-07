@@ -5,6 +5,7 @@ import router from './controllers';
 import { AuctionModel } from './models/AuctionModel';
 import { BidModel } from './models/BidModel';
 import { UserModel } from './models/UserModel';
+import { createUser } from "./repositories";
 
 const server = express();
 
@@ -34,6 +35,17 @@ const connectToDatabase = async () => {
     req.db = connection;
     return next();
   });
+
+  // add fake auctioneer
+  const addFakeAuctioneer = async () => {
+    const auctioneerId = '249b2f8b-5285-4031-a164-63102017a9ba';
+    const auctioneer = {
+      id: auctioneerId,
+      username: 'auctioneer',
+      balance: 100,
+    }
+    await createUser(connection, auctioneer);
+  }
 
   // specify prefix for the routes implemented in controllers.ts
   server.use('/', router);

@@ -7,17 +7,6 @@ import { Auction, Bid, User } from './types';
 
 const router = express.Router();
 
-const addFakeAuctioneer = async () => {
-  const auctioneerId = '249b2f8b-5285-4031-a164-63102017a9ba';
-  const auctioneer = {
-    id: auctioneerId,
-    username: 'auctioneer',
-    balance: 100,
-  }
-  const conn = getConnection();
-  await createUser(conn, auctioneer);
-}
-
 // define the routes
 router.get('/auctions', async (req, res) => {
   const auctionList = await getAuctions(req.db);
